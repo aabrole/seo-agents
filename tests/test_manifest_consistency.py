@@ -206,7 +206,8 @@ def test_orchestrator_sub_skills_list_matches_disk():
     """
     text = (REPO_ROOT / "skills" / "seo" / "SKILL.md").read_text()
     section = _extract_section(text, "Sub-Skills")
-    listed_list = re.findall(r"^\d+\.\s+\*\*(seo-[a-z-]+)\*\*", section, re.MULTILINE)
+    # Fork note: masterlist additions use geo-/aeo-/plain prefixes, not just seo-.
+    listed_list = re.findall(r"^\d+\.\s+\*\*([a-z][a-z-]+)\*\*", section, re.MULTILINE)
     assert len(listed_list) == len(set(listed_list)), (
         f"Duplicate entries in Sub-Skills list: "
         f"{[n for n in listed_list if listed_list.count(n) > 1]}"
@@ -279,6 +280,21 @@ def test_skill_metadata_versions_match_plugin_json():
     # Each entry: skill name -> expected literal version string.
     COMMUNITY_OVERRIDES = {"seo-content-brief": "1.0.0"}
 
+    # Fork additions from aabrole/aeo-seo-geo-masterlist keep their upstream
+    # version cadence (or ship no metadata.version) and are exempt from the
+    # plugin-version lockstep.
+    MASTERLIST_SKILLS = {
+        "aeo-audit", "ai-seo", "competitor-alternatives", "content-brief",
+        "content-strategy", "eeat-audit", "expert-interview",
+        "featured-snippet-optimizer", "geo-audit", "geo-brand-mentions",
+        "geo-citability", "geo-compare", "geo-content", "geo-crawlers",
+        "geo-llmstxt", "geo-platform-optimizer", "geo-proposal", "geo-prospect",
+        "geo-report", "geo-report-pdf", "geo-schema", "geo-technical",
+        "improve-content", "keyword-deep-dive", "linkbuilding", "page-audit",
+        "programmatic-seo", "schema-markup", "semantic-gap-analysis",
+        "site-architecture", "topic-cluster-planning", "write-content",
+    }
+
     plugin = json.loads(PLUGIN_JSON.read_text())
     expected_default = plugin["version"]
     errors = []
@@ -288,6 +304,8 @@ def test_skill_metadata_versions_match_plugin_json():
     )
     for skill_md in candidates:
         skill_name = skill_md.parent.name
+        if skill_name in MASTERLIST_SKILLS:
+            continue
         rel = skill_md.relative_to(REPO_ROOT)
         text = skill_md.read_text()
         frontmatter = _extract_frontmatter(text)
@@ -374,7 +392,7 @@ def test_canonical_math_adds_up():
     )
     headline = int(headline_match.group(1))
     breakdown = headline_match.group(2)
-    parts = [int(n) for n in re.findall(r"(\d+)\s+(?:core|orchestrator|framework|extension)", breakdown)]
+    parts = [int(n) for n in re.findall(r"(\d+)\s+(?:core|orchestrator|framework|extension|masterlist)", breakdown)]
     assert sum(parts) == headline, (
         f"plugin.json canonical phrasing breakdown {breakdown!r} sums to "
         f"{sum(parts)} but headline claims {headline}. Math must add up."

@@ -1,0 +1,27 @@
+{
+  "skill_name": "aeo-audit",
+  "description": "Test cases covering the three audit modes and a representative business-type mix",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "quick_mode_stripe_no_api_keys",
+      "prompt": "Run a quick AEO audit on stripe.com. Category is 'payment processing'. Competitors are Adyen, Square, and Checkout.com. I don't have AI API keys set up — skip the live citation test, but give me the site-level findings. Use standard output filenames (AEO-AUDIT-REPORT.md, AEO-AUDIT-DATA.json).",
+      "expected_output": "Should skip Phase 1 gracefully, produce a full site audit with composite score computed from the 5 site-audit dimensions (weights renormalized), and note the missing Phase 1 in the report. Report should still be client-deliverable quality.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "eval_name": "standard_mode_saas_with_live_citation",
+      "prompt": "Do a standard AEO audit on linear.app — a SaaS project management tool. Competitors: Jira, Asana, Notion. I have ANTHROPIC_API_KEY and PERPLEXITY_API_KEY set. Run the full audit including live citation test.",
+      "expected_output": "Should execute Phase 1 (15 queries: 5 prompts × ChatGPT/Claude/Perplexity, though ChatGPT skipped since no OPENAI_API_KEY) and all of Phase 2. Should detect SaaS business type and apply SaaS-specific schema priorities (SoftwareApplication, FAQPage, Integration pages). Composite score should include all 6 dimensions. Report should lead with Live Citation findings showing how Linear fares vs Jira/Asana/Notion.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "eval_name": "deep_mode_local_business_full_eeat",
+      "prompt": "Deep AEO audit on bluetreedental.com — a dental practice in Austin. Competitors are austindentist.com and smiledoctors.com. Full 80-item CORE-EEAT checklist. All my API keys are set. I want the HTML presentation-ready version of the report in addition to the markdown.",
+      "expected_output": "Should detect LocalBusiness type and apply local-specific adjustments (+10% Technical weight, +5% Schema weight, NAP consistency check). Should run full 80-item EEAT evaluation. Should generate AEO-AUDIT-REPORT.md, AEO-AUDIT-DATA.json, AND AEO-AUDIT-REPORT.html. Live citation prompts should include local-specific variants ('Best dentist near Austin', etc.).",
+      "files": []
+    }
+  ]
+}

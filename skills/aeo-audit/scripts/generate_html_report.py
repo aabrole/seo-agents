@@ -1,0 +1,437 @@
+#!/usr/bin/env python3
+"""
+Generate a presentation-ready HTML version of the AEO audit report.
+
+Designed to look expensive in screen recordings — dark theme, high contrast,
+bold scorecards, data visualization. Single-file HTML output, no external deps.
+
+Takes the same AEO-AUDIT-DATA.json produced by generate_report.py as input.
+
+Usage:
+    python generate_html_report.py \\
+        --data AEO-AUDIT-DATA.json \\
+        --output AEO-AUDIT-REPORT.html
+"""
+
+import argparse
+import json
+import sys
+from html import escape
+
+
+def rating_class(score: float) -> str:
+    if score >= 75:
+        return "excellent"
+    if score >= 60:
+        return "good"
+    if score >= 40:
+        return "fair"
+    return "poor"
+
+
+def score_bar(score, label):
+    if score is None:
+        return f'<div class="score-row"><span class="score-label">{escape(label)}</span><span class="score-missing">—</span></div>'
+    cls = rating_class(score)
+    pct = max(0, min(100, score))
+    return f"""
+      <div class="score-row">
+        <span class="score-label">{escape(label)}</span>
+        <div class="bar-container">
+          <div class="bar {cls}" style="width:{pct}%"></div>
+          <span class="bar-value">{score}</span>
+        </div>
+      </div>
+    """
+
+
+def format_live_citation_html(data):
+    if not data:
+        return """<div class="empty-state">
+          <h3>Live Citation Test not run</h3>
+          <p>No AI API keys were configured. Set <code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code>, or <code>PERPLEXITY_API_KEY</code> to enable live citation testing.</p>
+        </div>"""
+
+    scoring = data.get("scoring", {})
+    score = scoring.get("composite_score", 0)
+    sub = scoring.get("sub_scores", {})
+    n_mentions = scoring.get("n_mentions", 0)
+    n_total = scoring.get("n_queries_total", 0)
+    hit_pct = round(100 * n_mentions / n_total, 0) if n_total else 0
+    cls = rating_class(score)
+
+    raw = data.get("raw_results", [])
+    representative = [r for r in raw if r.get("response_text") and not r.get("error")][:4]
+
+    responses_html = ""
+    for r in representative:
+        comp = r.get("competitors_mentioned", [])
+        comp_html = f'<span class="meta-item">Competitors cited: <strong>{", ".join(escape(c) for c in comp)}</strong></span>' if comp else ""
+        mentioned_badge = '<span class="badge badge-yes">Mentioned</span>' if r["mentioned"] else '<span class="badge badge-no">Not mentioned</span>'
+        position = f'<span class="meta-item">Position: <strong>{r["position"]}</strong></span>' if r.get("position") else ''
+        sentiment = r.get("sentiment", "unknown")
+        snippet = escape(r["response_text"][:400].strip().replace("\n", " "))
+        ellipsis = "…" if len(r["response_text"]) > 400 else ""
+        responses_html += f"""
+          <div class="response-card">
+            <div class="response-header">
+              <span class="provider-tag">{escape(r['provider'].title())}</span>
+              <span class="prompt-type">{escape(r['prompt_label'])}</span>
+              {mentioned_badge}
+            </div>
+            <div class="response-meta">
+              {position}
+              <span class="meta-item">Sentiment: <strong>{escape(sentiment)}</strong></span>
+              {comp_html}
+            </div>
+            <blockquote class="response-text">{snippet}{ellipsis}</blockquote>
+          </div>
+        """
+
+    return f"""
+      <div class="hero-score-card {cls}">
+        <div class="hero-label">Live Citation Score</div>
+        <div class="hero-score">{score}<span class="hero-total">/100</span></div>
+        <div class="hero-sub">
+          Brand mentioned in <strong>{n_mentions}</strong> of <strong>{n_total}</strong> queries ({hit_pct}%)
+          across {', '.join(escape(p.title()) for p in data.get('providers_used', []))}
+        </div>
+      </div>
+
+      <h3>Sub-scores</h3>
+      <div class="score-grid">
+        {score_bar(sub.get('name_query_hit_rate'), 'Name query — does AI know you exist?')}
+        {score_bar(sub.get('category_query_position_score'), 'Category query — ranking in top-of-mind list')}
+        {score_bar(sub.get('problem_query_hit_rate'), 'Problem query — recommended for use cases')}
+        {score_bar(sub.get('comparison_framing_score'), 'Comparison query — framing & sentiment')}
+        {score_bar(sub.get('alternative_query_hit_rate'), 'Alternative query — discovered as alternative')}
+      </div>
+
+      <h3>What AI actually says about you</h3>
+      <div class="responses">
+        {responses_html or '<p class="muted">No successful responses to display.</p>'}
+      </div>
+    """
+
+
+def format_citability_html(data):
+    if not data:
+        return '<p class="muted">Citability analysis not available.</p>'
+    score = data.get("site_avg_citability", 0)
+    coverage = data.get("site_coverage_pct", 0)
+    cls = rating_class(score)
+
+    pages = data.get("pages", [])
+    successful = [p for p in pages if "error" not in p]
+
+    top_html = ""
+    if successful:
+        top = sorted(successful, key=lambda p: p.get("average_citability_score", 0), reverse=True)[:3]
+        bottom = sorted(successful, key=lambda p: p.get("average_citability_score", 0))[:3]
+        top_html = "<h3>Top pages</h3><ul class='page-list'>"
+        for p in top:
+            top_html += f"<li><code>{escape(p['url'])}</code> — <strong>{p.get('average_citability_score', 0)}</strong>/100 · {p.get('citability_coverage_pct', 0)}% coverage</li>"
+        top_html += "</ul><h3>Rewrite priorities</h3><ul class='page-list'>"
+        for p in bottom:
+            top_html += f"<li><code>{escape(p['url'])}</code> — <strong>{p.get('average_citability_score', 0)}</strong>/100</li>"
+        top_html += "</ul>"
+
+    return f"""
+      <div class="score-card {cls}">
+        <div class="card-label">AI Citability</div>
+        <div class="card-score">{score}<span class="card-total">/100</span></div>
+        <div class="card-sub">{coverage}% of content blocks score above 70 (citability coverage)</div>
+      </div>
+      {top_html}
+    """
+
+
+def format_dimension_html(data, name, score_key="score"):
+    if not data:
+        return f'<p class="muted">{escape(name)} analysis not available.</p>'
+    score = data.get(score_key, 0)
+    cls = rating_class(score) if score else "poor"
+    notes = data.get("notes", "")
+    findings = data.get("findings", [])
+    findings_html = ""
+    if findings:
+        findings_html = "<ul class='findings'>"
+        for f in findings[:8]:
+            findings_html += f"<li>{escape(str(f))}</li>"
+        findings_html += "</ul>"
+    return f"""
+      <div class="score-card {cls}">
+        <div class="card-label">{escape(name)}</div>
+        <div class="card-score">{score}<span class="card-total">/100</span></div>
+      </div>
+      {f'<p>{escape(notes)}</p>' if notes else ''}
+      {findings_html}
+    """
+
+
+def format_schema_html(data):
+    if not data:
+        return '<p class="muted">Schema analysis not available.</p>'
+    summary = data.get("summary", {})
+    score = summary.get("score", 0)
+    cls = rating_class(score)
+    schemas = summary.get("schemas_site_wide", {})
+    missing = summary.get("missing_critical", [])
+
+    schemas_html = ""
+    if schemas:
+        schemas_html = "<div class='schema-chips'>"
+        for t, n in sorted(schemas.items(), key=lambda x: -x[1]):
+            schemas_html += f"<span class='chip'><code>{escape(t)}</code> × {n}</span>"
+        schemas_html += "</div>"
+    else:
+        schemas_html = "<p class='muted'>No schema markup detected.</p>"
+
+    missing_html = ""
+    if missing:
+        missing_html = "<h3>Missing critical schemas</h3><ul class='findings warning'>"
+        for m in missing:
+            missing_html += f"<li>{escape(m)}</li>"
+        missing_html += "</ul>"
+
+    return f"""
+      <div class="score-card {cls}">
+        <div class="card-label">Schema & Structured Data</div>
+        <div class="card-score">{score}<span class="card-total">/100</span></div>
+      </div>
+      <h3>Schemas found site-wide</h3>
+      {schemas_html}
+      {missing_html}
+    """
+
+
+HTML_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AEO Audit · {brand}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {{
+    --bg: #0b0d12;
+    --bg-2: #12151c;
+    --bg-3: #1a1f2b;
+    --text: #e8edf4;
+    --text-muted: #8b94a7;
+    --accent: #7c5cff;
+    --accent-2: #4fd1c5;
+    --excellent: #4fd1c5;
+    --good: #7c5cff;
+    --fair: #f5a623;
+    --poor: #e85c67;
+    --border: #242a38;
+  }}
+  * {{ box-sizing: border-box; }}
+  html, body {{ margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif; line-height: 1.6; }}
+  main {{ max-width: 960px; margin: 0 auto; padding: 64px 48px; }}
+  h1 {{ font-size: 48px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 8px; }}
+  h2 {{ font-size: 28px; font-weight: 600; letter-spacing: -0.01em; margin: 72px 0 24px; padding-top: 32px; border-top: 1px solid var(--border); }}
+  h3 {{ font-size: 18px; font-weight: 600; margin: 32px 0 16px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }}
+  .meta-bar {{ color: var(--text-muted); font-size: 14px; margin-bottom: 48px; display: flex; gap: 24px; flex-wrap: wrap; }}
+  .meta-bar strong {{ color: var(--text); }}
+  code {{ background: var(--bg-3); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; font-family: "SF Mono", Menlo, monospace; }}
+
+  /* Composite hero score */
+  .composite-hero {{ background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%); border: 1px solid var(--border); border-radius: 20px; padding: 48px; margin-bottom: 48px; text-align: center; }}
+  .composite-label {{ color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 0.1em; margin-bottom: 12px; }}
+  .composite-score {{ font-size: 96px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; margin-bottom: 12px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }}
+  .composite-total {{ font-size: 32px; color: var(--text-muted); font-weight: 400; -webkit-text-fill-color: var(--text-muted); }}
+  .composite-rating {{ font-size: 18px; font-weight: 500; }}
+  .composite-rating.excellent {{ color: var(--excellent); }}
+  .composite-rating.good {{ color: var(--good); }}
+  .composite-rating.fair {{ color: var(--fair); }}
+  .composite-rating.poor {{ color: var(--poor); }}
+
+  /* Dimension breakdown table */
+  .breakdown-table {{ width: 100%; border-collapse: collapse; margin: 24px 0; }}
+  .breakdown-table th, .breakdown-table td {{ text-align: left; padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }}
+  .breakdown-table th {{ color: var(--text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.08em; font-weight: 600; }}
+  .breakdown-table td:nth-child(2), .breakdown-table td:nth-child(3) {{ text-align: right; font-variant-numeric: tabular-nums; }}
+  .breakdown-table tr.total {{ font-weight: 700; background: var(--bg-2); }}
+  .breakdown-table tr.total td {{ border-bottom: none; }}
+
+  /* Hero / score cards */
+  .hero-score-card {{ background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 40px; margin: 24px 0 32px; border-left: 4px solid var(--accent); }}
+  .hero-score-card.excellent {{ border-left-color: var(--excellent); }}
+  .hero-score-card.good {{ border-left-color: var(--good); }}
+  .hero-score-card.fair {{ border-left-color: var(--fair); }}
+  .hero-score-card.poor {{ border-left-color: var(--poor); }}
+  .hero-label {{ color: var(--text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.08em; }}
+  .hero-score {{ font-size: 72px; font-weight: 800; line-height: 1; margin: 12px 0; }}
+  .hero-total {{ font-size: 28px; color: var(--text-muted); font-weight: 400; }}
+  .hero-sub {{ color: var(--text-muted); font-size: 16px; }}
+
+  .score-card {{ background: var(--bg-2); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 12px; padding: 24px 32px; margin: 16px 0; }}
+  .score-card.excellent {{ border-left-color: var(--excellent); }}
+  .score-card.good {{ border-left-color: var(--good); }}
+  .score-card.fair {{ border-left-color: var(--fair); }}
+  .score-card.poor {{ border-left-color: var(--poor); }}
+  .card-label {{ color: var(--text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.08em; }}
+  .card-score {{ font-size: 40px; font-weight: 700; line-height: 1; margin-top: 4px; }}
+  .card-total {{ font-size: 18px; color: var(--text-muted); font-weight: 400; }}
+  .card-sub {{ color: var(--text-muted); font-size: 14px; margin-top: 8px; }}
+
+  /* Score bars */
+  .score-grid {{ display: grid; gap: 12px; margin: 16px 0; }}
+  .score-row {{ display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 20px; }}
+  .score-label {{ font-size: 14px; color: var(--text); }}
+  .bar-container {{ display: flex; align-items: center; gap: 12px; min-width: 240px; }}
+  .bar {{ height: 8px; border-radius: 4px; min-width: 2px; background: var(--accent); flex-shrink: 0; width: 200px; }}
+  .bar.excellent {{ background: var(--excellent); }}
+  .bar.good {{ background: var(--good); }}
+  .bar.fair {{ background: var(--fair); }}
+  .bar.poor {{ background: var(--poor); }}
+  .bar-value {{ font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14px; min-width: 32px; text-align: right; }}
+  .score-missing {{ color: var(--text-muted); font-style: italic; }}
+
+  /* Response cards */
+  .responses {{ display: grid; gap: 16px; margin: 16px 0; }}
+  .response-card {{ background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; }}
+  .response-header {{ display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }}
+  .provider-tag {{ background: var(--bg-3); color: var(--accent-2); padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }}
+  .prompt-type {{ color: var(--text-muted); font-size: 13px; }}
+  .badge {{ padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: auto; }}
+  .badge-yes {{ background: rgba(79, 209, 197, 0.15); color: var(--excellent); }}
+  .badge-no {{ background: rgba(232, 92, 103, 0.15); color: var(--poor); }}
+  .response-meta {{ display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }}
+  .response-meta strong {{ color: var(--text); }}
+  .response-text {{ border-left: 3px solid var(--border); margin: 0; padding: 0 0 0 16px; color: var(--text); font-style: italic; font-size: 14px; line-height: 1.6; }}
+
+  /* Lists */
+  .page-list, .findings {{ list-style: none; padding: 0; margin: 12px 0; }}
+  .page-list li, .findings li {{ padding: 10px 16px; background: var(--bg-2); border-left: 3px solid var(--border); margin-bottom: 6px; border-radius: 4px; font-size: 14px; }}
+  .findings.warning li {{ border-left-color: var(--poor); }}
+
+  /* Schema chips */
+  .schema-chips {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }}
+  .chip {{ background: var(--bg-2); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 13px; }}
+
+  /* Empty state */
+  .empty-state {{ background: var(--bg-2); border: 1px dashed var(--border); border-radius: 12px; padding: 32px; text-align: center; color: var(--text-muted); }}
+  .empty-state h3 {{ margin-top: 0; color: var(--text); text-transform: none; letter-spacing: 0; font-size: 18px; }}
+
+  .muted {{ color: var(--text-muted); }}
+
+  /* Footer */
+  footer {{ margin-top: 96px; padding-top: 32px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 13px; }}
+  footer a {{ color: var(--accent-2); text-decoration: none; }}
+</style>
+</head>
+<body>
+<main>
+  <h1>AEO Audit · {brand}</h1>
+  <div class="meta-bar">
+    <span><strong>{url}</strong></span>
+    <span>Category: <strong>{category}</strong></span>
+    <span>Mode: <strong>{mode}</strong></span>
+    <span>Generated: <strong>{generated}</strong></span>
+  </div>
+
+  <div class="composite-hero">
+    <div class="composite-label">Overall AEO Score</div>
+    <div class="composite-score">{composite_score}<span class="composite-total">/100</span></div>
+    <div class="composite-rating {composite_class}">{composite_rating}</div>
+  </div>
+
+  <h3>Score breakdown</h3>
+  <table class="breakdown-table">
+    <thead><tr><th>Dimension</th><th>Score</th><th>Weight</th></tr></thead>
+    <tbody>{breakdown_rows}</tbody>
+  </table>
+
+  <h2>1 · Live Citation Test</h2>
+  {live_citation_html}
+
+  <h2>2 · AI Citability</h2>
+  {citability_html}
+
+  <h2>3 · Brand Authority</h2>
+  {brand_authority_html}
+
+  <h2>4 · Content CORE-EEAT</h2>
+  {core_eeat_html}
+
+  <h2>5 · Technical AEO</h2>
+  {technical_html}
+
+  <h2>6 · Schema & Structured Data</h2>
+  {schema_html}
+
+  <footer>
+    <p>Methodology adapted from <a href="https://github.com/zubair-trabzada/geo-seo-claude">geo-seo-claude</a>, <a href="https://github.com/aaron-he-zhu/core-eeat-content-benchmark">core-eeat-content-benchmark</a>, and <a href="https://github.com/coreyhaines31/marketingskills">marketingskills</a>. AEO is probabilistic — re-run monthly to track trajectory.</p>
+  </footer>
+</main>
+</body>
+</html>
+"""
+
+
+def generate_html(data_path, output_path):
+    with open(data_path) as f:
+        data = json.load(f)
+
+    composite = data.get("composite", {})
+    composite_score = composite.get("score", 0)
+    composite_rating = composite.get("rating", "Unknown")
+    composite_class = rating_class(composite_score)
+    weights = composite.get("weights_used", {})
+    scores = data.get("scores", {})
+    phase = data.get("phase_outputs", {})
+
+    # Breakdown rows
+    label_map = [
+        ("live_citation", "Live Citation Test"),
+        ("citability", "AI Citability"),
+        ("brand_authority", "Brand Authority"),
+        ("core_eeat", "Content CORE-EEAT"),
+        ("technical", "Technical AEO"),
+        ("schema", "Schema & Structured Data"),
+    ]
+    rows = []
+    for k, label in label_map:
+        s = scores.get(k)
+        w = weights.get(k, 0)
+        s_display = f"{s}" if s is not None else "—"
+        w_display = f"{round(100*w, 1)}%" if w else "—"
+        rows.append(f"<tr><td>{label}</td><td>{s_display}</td><td>{w_display}</td></tr>")
+    rows.append(f'<tr class="total"><td>Overall</td><td>{composite_score}</td><td>100%</td></tr>')
+    breakdown_rows = "".join(rows)
+
+    filled = HTML_TEMPLATE.format(
+        brand=escape(data.get("brand", "Unknown")),
+        url=escape(data.get("url", "")),
+        category=escape(data.get("category", "")),
+        mode=escape(data.get("audit_mode", "standard")),
+        generated=escape(data.get("generated_at", "")[:10]),
+        composite_score=composite_score,
+        composite_rating=escape(composite_rating),
+        composite_class=composite_class,
+        breakdown_rows=breakdown_rows,
+        live_citation_html=format_live_citation_html(phase.get("live_citation")),
+        citability_html=format_citability_html(phase.get("citability")),
+        brand_authority_html=format_dimension_html(phase.get("brand_authority"), "Brand Authority"),
+        core_eeat_html=format_dimension_html(phase.get("core_eeat"), "Content CORE-EEAT"),
+        technical_html=format_dimension_html(phase.get("technical"), "Technical AEO"),
+        schema_html=format_schema_html(phase.get("schema")),
+    )
+
+    with open(output_path, "w") as f:
+        f.write(filled)
+    print(f"HTML report: {output_path}", file=sys.stderr)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate presentation-ready HTML AEO report")
+    parser.add_argument("--data", required=True, help="AEO-AUDIT-DATA.json input")
+    parser.add_argument("--output", default="AEO-AUDIT-REPORT.html")
+    args = parser.parse_args()
+    generate_html(args.data, args.output)
+
+
+if __name__ == "__main__":
+    main()

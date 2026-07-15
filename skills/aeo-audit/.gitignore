@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Environment
+.env
+.env.local
+*.env
+
+# Audit outputs (don't commit client data)
+AEO-AUDIT-REPORT.md
+AEO-AUDIT-REPORT.html
+AEO-AUDIT-DATA.json
+audit-data/
+reports/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (in case contributors add tooling)
+node_modules/
+
+# Skill-creator workspace outputs
+aeo-audit-workspace/

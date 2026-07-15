@@ -17,9 +17,10 @@ metadata:
 **Scripts:** Located at the plugin root `scripts/` directory.
 
 Comprehensive SEO analysis across all industries (SaaS, local services,
-e-commerce, publishers, agencies). Orchestrates 24 sub-skills (21 core + 1 framework
-integration + 2 extension mirrors) and 18 sub-agents. A separate optional Firecrawl
-extension is also installable (see "Optional Extensions" below).
+e-commerce, publishers, agencies). Orchestrates 56 sub-skills (21 core + 1 framework
+integration + 2 extension mirrors + 32 masterlist additions) and 18 sub-agents plus
+10 GEO/AEO agents. A separate optional Firecrawl extension is also installable
+(see "Optional Extensions" below).
 
 ## Quick Reference
 
@@ -196,9 +197,12 @@ Weighted aggregate of all categories:
 
 ## Sub-Skills
 
-This skill orchestrates 24 sub-skills (21 core + 1 framework integration + 2 extension
-mirrors). The orchestrator itself (`seo`) is the 25th in `skills/`, but does not
-orchestrate itself, so it is not enumerated below.
+This skill orchestrates 56 sub-skills (21 core + 1 framework integration + 2 extension
+mirrors + 32 masterlist additions). The orchestrator itself (`seo`) is the 57th in
+`skills/`, but does not orchestrate itself, so it is not enumerated below. Entries
+25-56 are fork additions from `aabrole/aeo-seo-geo-masterlist`; they are standalone
+skills the model auto-routes to via their own trigger descriptions rather than
+`/seo` subcommands.
 
 1. **seo-audit** -- Full website audit with parallel delegation
 2. **seo-page** -- Deep single-page analysis
@@ -224,6 +228,38 @@ orchestrate itself, so it is not enumerated below.
 22. **seo-dataforseo** -- Live SEO data via DataForSEO MCP (extension mirror)
 23. **seo-image-gen** -- AI image generation for SEO assets via Gemini (extension mirror)
 24. **seo-flow** -- FLOW framework integration (Find -> Leverage -> Optimize -> Win, 41 AI prompts, CC BY 4.0)
+25. **geo-audit** -- Full GEO+SEO audit with parallel subagent delegation, composite GEO Score 0-100 (masterlist)
+26. **geo-citability** -- AI citability scoring with block-level rewrite suggestions (masterlist)
+27. **geo-crawlers** -- AI crawler access analysis: robots.txt, meta tags, headers (masterlist)
+28. **geo-llmstxt** -- llms.txt validation and generation (masterlist)
+29. **geo-platform-optimizer** -- Per-platform optimization: AI Overviews, ChatGPT, Perplexity, Gemini, Bing Copilot (masterlist)
+30. **geo-brand-mentions** -- Brand authority scanner across platforms AI models cite, 0-100 score (masterlist)
+31. **geo-content** -- Content E-E-A-T assessment for AI citability (masterlist)
+32. **geo-technical** -- Technical GEO infrastructure audit (masterlist)
+33. **geo-schema** -- GEO-critical schema validation and gap analysis (masterlist)
+34. **geo-report** -- Client-facing GEO report in markdown (masterlist)
+35. **geo-report-pdf** -- Client-facing GEO report as PDF via ReportLab (masterlist)
+36. **geo-compare** -- Monthly delta tracking between GEO audits with progress report (masterlist)
+37. **geo-proposal** -- GEO service proposal generator with packages and pricing (masterlist)
+38. **geo-prospect** -- CRM-lite pipeline tracking for GEO agency prospects (masterlist)
+39. **aeo-audit** -- AEO audit with live-citation testing against AI models, composite AEO Score (masterlist)
+40. **ai-seo** -- Optimize content to be cited by LLMs and AI answer engines (masterlist)
+41. **schema-markup** -- Structured data and rich results implementation guide (masterlist)
+42. **programmatic-seo** -- Template + data pages at scale (masterlist)
+43. **content-strategy** -- Content planning, topic clusters, editorial calendar (masterlist)
+44. **site-architecture** -- Page hierarchy, navigation, URL structure, internal linking (masterlist)
+45. **competitor-alternatives** -- Competitor comparison and alternative pages (masterlist)
+46. **content-brief** -- SERP-driven, writer-ready content briefs (masterlist)
+47. **write-content** -- SEO article writing with anti-AI-slop rules (masterlist)
+48. **improve-content** -- Refresh underperforming pages (masterlist)
+49. **keyword-deep-dive** -- Single-keyword ranking playbook (masterlist)
+50. **eeat-audit** -- Page-level E-E-A-T scoring with prescribed additions (masterlist)
+51. **expert-interview** -- Extract first-party expertise before writing (masterlist)
+52. **featured-snippet-optimizer** -- Win featured snippets for keywords you already rank for (masterlist)
+53. **semantic-gap-analysis** -- Semantic gaps vs competitors (masterlist)
+54. **linkbuilding** -- Phase-appropriate link acquisition planning (masterlist)
+55. **page-audit** -- 7-dimension single-page audit with live SERP competitor reads (masterlist)
+56. **topic-cluster-planning** -- Topic cluster planning (masterlist)
 
 ### Optional Extensions
 
@@ -260,6 +296,22 @@ For parallel analysis during audits:
 - `seo-flow` -- FLOW framework prompts (conditional: spawned for content strategy workflows)
 - `seo-dataforseo` -- Live SERP, keyword, backlink, local SEO data (extension, optional)
 - `seo-image-gen` -- SEO image audit and generation plan (extension, optional)
+
+### GEO/AEO subagents (fork additions)
+
+These back the `geo-audit` and `aeo-audit` orchestrator skills and are defined in
+`agents/geo-*.md` and `agents/aeo-*.md`:
+
+- geo-ai-visibility -- Citability, AI crawler access, brand presence scan
+- geo-platform-analysis -- AI Overviews / AI Mode / ChatGPT / Perplexity / Gemini / Bing Copilot readiness
+- geo-technical -- AI crawler access, llms.txt, SSR/SPA rendering, CWV
+- geo-content -- E-E-A-T signals as they affect AI citation
+- geo-schema -- GEO-critical schema validation and generation
+- aeo-citability -- Citability rubric scoring with rewrites
+- aeo-brand-authority -- YouTube/Reddit/Wikipedia/LinkedIn authority measurement
+- aeo-technical -- Infrastructure-level AI crawler access
+- aeo-content-eeat -- 80-item CORE-EEAT checklist
+- aeo-schema -- AEO priority schema validation and JSON-LD generation
 
 ## Error Handling
 
