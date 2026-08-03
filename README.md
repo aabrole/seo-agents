@@ -37,6 +37,12 @@ consulting stack:
 - **Marketing SEO (6 skills)** — ai-seo, schema-markup, programmatic-seo,
   content-strategy, site-architecture, competitor-alternatives. From
   [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT).
+- **`striking-distance`** — original to this fork. GSC-driven refresh workflow for
+  pages ranking 9-30: finds queries a page earns impressions for but never directly
+  answers, writes self-contained answer blocks (heading + direct answer + evidence in
+  one chunk), plans entity-anchor internal links both ways, and stamps a visible
+  last-updated date. Includes a BOFU weekly-routine variant. Process credit:
+  Charles Floate (@Charles_SEO).
 - **10 new agents** (`agents/geo-*.md`, `agents/aeo-*.md`) so the `geo-audit` and
   `aeo-audit` orchestrators get real parallel subagent delegation instead of falling
   back to generic agents.
