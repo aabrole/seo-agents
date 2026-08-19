@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `copy-watermark-hygiene` skill — finalization pass that strips invisible
+  provenance marks (Layer A: zero-width chars, no-break spaces, homoglyphs) and
+  AI metadata from produced copy before client/CMS handoff, with an honest
+  Layer B (statistical-watermark rewrite) caveat. Thin client over the
+  open-source `guillaumemeyer/watermarks-remover` service.
+- `scripts/wm_serve.sh` — idempotent launcher for the watermarks-remover service
+  (auto-clones upstream on first run; requires Python 3.10+).
+- `scripts/clean_copy.sh` — inspect/clean a single copy file via the service.
+
 ## [2.2.4] - 2026-07-20
 
 Community maintenance release following a full review of every open issue and pull request.
