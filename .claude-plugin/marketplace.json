@@ -5,13 +5,13 @@
     "name": "AgriciDaniel"
   },
   "metadata": {
-    "description": "Comprehensive SEO analysis plugin for Claude Code. 58 sub-skills and 18 sub-agents, plus 8 optional MCP extensions (DataForSEO, Firecrawl, Banana, Ahrefs, SE Ranking, Profound, Bing Webmaster, Unlighthouse). v2.2.4 adds a managed cross-platform runtime and safe sitemap discovery, and repairs GSC pagination, Bing endpoints, extension paths, Windows portability, SPA rendering, and JSON-LD extraction."
+    "description": "Comprehensive SEO analysis plugin for Claude Code. 69 sub-skills and 28 agents (18 sub-agents + 10 GEO/AEO agents), plus 8 optional MCP extensions (DataForSEO, Firecrawl, Banana, Ahrefs, SE Ranking, Profound, Bing Webmaster, Unlighthouse). v2.2.4 adds a managed cross-platform runtime and safe sitemap discovery, and repairs GSC pagination, Bing endpoints, extension paths, Windows portability, SPA rendering, and JSON-LD extraction."
   },
   "plugins": [
     {
       "name": "claude-seo",
       "source": "./",
-      "description": "Comprehensive SEO analysis plugin for Claude Code. 58 sub-skills (21 core + 1 orchestrator + 1 framework integration + 2 extension mirrors + 32 masterlist additions + 1 original) and 18 sub-agents (15 core + 1 framework integration + 2 extension mirrors), plus 8 optional MCP extensions. v2.2.4 adds a managed cross-platform runtime and safe sitemap discovery, and repairs GSC pagination, Bing endpoints, extension paths, Windows portability, SPA rendering, JSON-LD extraction, and DataForSEO permissions.",
+      "description": "Comprehensive SEO analysis plugin for Claude Code. 69 sub-skills (21 core + 1 orchestrator + 1 framework integration + 2 extension mirrors + 32 masterlist additions + 12 original) and 28 agents: 18 sub-agents (15 core + 1 framework integration + 2 extension mirrors) and 10 GEO/AEO agents, plus 8 optional MCP extensions. v2.2.4 adds a managed cross-platform runtime and safe sitemap discovery, and repairs GSC pagination, Bing endpoints, extension paths, Windows portability, SPA rendering, JSON-LD extraction, and DataForSEO permissions.",
       "author": {
         "name": "AgriciDaniel",
         "url": "https://github.com/AgriciDaniel"
