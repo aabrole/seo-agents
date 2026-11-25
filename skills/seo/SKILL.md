@@ -20,9 +20,9 @@ installs expose this command automatically. Repository users run
 launcher path. Never invoke bundled scripts with a bare Python interpreter.
 
 Comprehensive SEO analysis across all industries (SaaS, local services,
-e-commerce, publishers, agencies). Orchestrates 56 sub-skills (21 core + 1 framework
-integration + 2 extension mirrors + 32 masterlist additions) and 18 sub-agents plus
-10 GEO/AEO agents. A separate optional Firecrawl extension is also installable
+e-commerce, publishers, agencies). Orchestrates 68 sub-skills (21 core + 1 framework
+integration + 2 extension mirrors + 32 masterlist additions + 12 fork originals) and
+18 sub-agents plus 10 GEO/AEO agents (28 agents in total). A separate optional Firecrawl extension is also installable
 (see "Optional Extensions" below).
 
 ## Quick Reference
@@ -211,10 +211,11 @@ Weighted aggregate of all categories:
 
 ## Sub-Skills
 
-This skill orchestrates 56 sub-skills (21 core + 1 framework integration + 2 extension
-mirrors + 32 masterlist additions). The orchestrator itself (`seo`) is the 57th in
-`skills/`, but does not orchestrate itself, so it is not enumerated below. Entries
-25-56 are fork additions from `aabrole/aeo-seo-geo-masterlist`; they are standalone
+This skill orchestrates 68 sub-skills (21 core + 1 framework integration + 2 extension
+mirrors + 32 masterlist additions + 12 fork originals). The orchestrator itself (`seo`)
+is the 69th in `skills/`, but does not orchestrate itself, so it is not enumerated below.
+Entries 25-56 are fork additions from `aabrole/aeo-seo-geo-masterlist` and entries 57-68
+are original to this fork; they are standalone
 skills the model auto-routes to via their own trigger descriptions rather than
 `/seo` subcommands.
 
@@ -275,6 +276,17 @@ skills the model auto-routes to via their own trigger descriptions rather than
 55. **page-audit** -- 7-dimension single-page audit with live SERP competitor reads (masterlist)
 56. **topic-cluster-planning** -- Topic cluster planning (masterlist)
 57. **striking-distance** -- GSC positions 9-30 answer-gap refresh: self-contained answer blocks for queries a page ranks for but never answers (fork original)
+58. **copy-watermark-hygiene** -- Strip invisible provenance marks and AI metadata from copy before it ships to a client or CMS (fork original)
+59. **fanout-coverage** -- Query fan-out coverage: map the sub-questions AI answer engines generate from one head query and close the gaps (fork original)
+60. **bofu-playbook** -- Sequence a bottom-of-funnel SEO engagement end to end (fork original)
+61. **bofu-keyword-research** -- Build a backlog of bottom-of-funnel buying-intent keywords (fork original)
+62. **bofu-landing-page** -- Spec and draft copy for one bottom-of-funnel landing page (fork original)
+63. **bofu-hub-pages** -- Build or audit hub pages that make bottom-of-funnel pages discoverable (fork original)
+64. **publish-and-track** -- Pre-publish QA, indexing, rank tracking, and fix plans for live pages (fork original)
+65. **authority-campaign** -- Executed, tracked off-site authority program for links and third-party AI sources (fork original)
+66. **review-amplification** -- Turn genuine customer reviews into content for consideration-stage branded searches (fork original)
+67. **platform-seo** -- Rank for buying keywords inside Reddit and the app stores (fork original)
+68. **video-seo** -- Rank videos for buying keywords on YouTube, Shorts, Reels, and TikTok (fork original)
 
 ### Optional Extensions
 
