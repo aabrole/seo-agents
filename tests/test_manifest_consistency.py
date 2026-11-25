@@ -294,6 +294,11 @@ def test_skill_metadata_versions_match_plugin_json():
         "programmatic-seo", "schema-markup", "semantic-gap-analysis",
         "site-architecture", "striking-distance", "topic-cluster-planning",
         "write-content",
+        # Fork-original skills (own version cadence).
+        "copy-watermark-hygiene", "fanout-coverage",
+        "authority-campaign", "bofu-hub-pages", "bofu-keyword-research",
+        "bofu-landing-page", "bofu-playbook", "platform-seo", "publish-and-track",
+        "review-amplification", "video-seo",
     }
 
     plugin = json.loads(PLUGIN_JSON.read_text(encoding="utf-8"))

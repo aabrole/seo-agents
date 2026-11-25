@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- BOFU and off-site authority suite (9 fork-original skills):
+  `bofu-keyword-research`, `bofu-landing-page`, `bofu-hub-pages`, `publish-and-track`,
+  `authority-campaign` (with six tactic references), `video-seo`, `platform-seo`,
+  `review-amplification`, and the `bofu-playbook` orchestrator. Fills the gaps between
+  the audit and AEO skills and actual delivery: buying-stage keyword selection, compact
+  landing pages and hub architecture, post-publish tracking, off-site authority, and
+  ranking on platforms beyond the website.
+- `fanout-coverage` skill: query fan-out coverage workflow for AI answer engines
+  (observe real sub-questions, gap by facet, consolidate duplicate intent, rewrite for
+  passage independence, citation baseline), with a facet taxonomy reference.
+
+### Changed
+- `tests/test_manifest_consistency.py`: fork-original skills (`copy-watermark-hygiene`,
+  `fanout-coverage`, and the BOFU suite) keep their own version cadence in the metadata
+  version check, like the existing masterlist skills.
 - `copy-watermark-hygiene` skill — finalization pass that strips invisible
   provenance marks (Layer A: zero-width chars, no-break spaces, homoglyphs) and
   AI metadata from produced copy before client/CMS handoff, with an honest

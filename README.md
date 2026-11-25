@@ -15,7 +15,11 @@
 > - 🌐 **Public open-source** → [`AgriciDaniel/claude-seo`](https://github.com/AgriciDaniel/claude-seo): MIT, public releases, no membership. Use this if you want stable + downloadable.
 > - 🔒 **Community private mirror** → [`AI-Marketing-Hub/claude-seo`](https://github.com/AI-Marketing-Hub/claude-seo): early access to upcoming features and direct collaboration with the [AI Marketing Hub Pro](https://www.skool.com/ai-marketing-hub-pro) community. Requires membership.
 
-## 🍴 About this fork (aabrole/claude-seo)
+## 🍴 About this fork (aabrole/seo-agents)
+
+**seo-agents** is my open-source SEO agent toolkit, built on the work of
+claude-seo, superseo-skills, geo-seo-claude and marketingskills, plus my own
+improvements.
 
 This fork extends upstream `claude-seo` v2.2.0 with **32 additional skills** and
 **10 additional sub-agents** from [`aabrole/aeo-seo-geo-masterlist`](https://github.com/aabrole/aeo-seo-geo-masterlist),
@@ -43,6 +47,33 @@ consulting stack:
   one chunk), plans entity-anchor internal links both ways, and stamps a visible
   last-updated date. Includes a BOFU weekly-routine variant. Process credit:
   Charles Floate (@Charles_SEO).
+- **`fanout-coverage`** - original to this fork. Query fan-out coverage workflow:
+  observes the real sub-questions AI Mode, Perplexity, and ChatGPT resolve for one head
+  topic, gaps them against the site by facet, consolidates duplicate-intent pages,
+  rewrites top pages for passage independence (question-shaped headings, answer-first
+  blocks, claim and evidence in the same chunk), and sets a citation baseline before the
+  fixes ship. Includes a facet taxonomy reference for classifying observed branches.
+- **BOFU and off-site authority suite (9 skills)** - original to this fork. A
+  bottom-of-funnel operating system that turns keyword research into shipped pages,
+  tracked rankings, and off-site authority:
+  - `bofu-keyword-research`: competitor keyword mining, buying-stage `=AI()` / LLM
+    filters, "[solution] for [plural audience]" expansion, hand SERP winnability reads,
+    one-page-vs-many decisions, GSC mining, and a prioritized keyword sheet.
+  - `bofu-landing-page`: spec and draft copy for one compact buying-intent page
+    (keyword-first title formula, placement map, standard layout, real images,
+    multi-product and "[competitor] alternative" variants with an HTML comparison table, QA).
+  - `bofu-hub-pages`: footer-linked hub pages, click-depth and orphan audit, hub layout
+    and ordering rules.
+  - `publish-and-track`: pre-publish QA, indexing, rank tracking, change log, realistic
+    timelines, and a stuck-page fix ladder.
+  - `authority-campaign`: a tracked off-site program (directories and launch platforms,
+    expert quotes via journalist platforms, press releases for branded AI answers, press
+    kit page, podcast guesting, events, linkable assets), drafts only, white-hat only.
+  - `video-seo`, `platform-seo` (Reddit and app stores), `review-amplification`
+    (genuine reviews turned into consideration-stage content for "[brand] review" and
+    "is [brand] legit" searches).
+  - `bofu-playbook`: orchestrator that sequences all of the above with the existing audit,
+    striking-distance, and AEO skills into a 90-day engagement plan with KPIs.
 - **10 new agents** (`agents/geo-*.md`, `agents/aeo-*.md`) so the `geo-audit` and
   `aeo-audit` orchestrators get real parallel subagent delegation instead of falling
   back to generic agents.
@@ -107,7 +138,7 @@ Run a full audit and watch parallel agents fan out across the site:
 
 ## Installation
 
-> ℹ️ **Which version are you installing?**
+> ℹ **Which version are you installing?**
 >
 > - **Public open-source (default).** The commands below install from [`AgriciDaniel/claude-seo`](https://github.com/AgriciDaniel/claude-seo) — MIT, public releases, no membership required.
 > - **AI Marketing Hub Pro member?** Install the community version with early access instead: swap `AgriciDaniel/claude-seo` for `AI-Marketing-Hub/claude-seo` and the plugin slug `claude-seo@agricidaniel-claude-seo` for `claude-seo@ai-marketing-hub-claude-seo`. Requires `gh auth login` (or PAT) with access to the `AI-Marketing-Hub` org. If `/plugin marketplace add` 404s, DM in the [Skool community](https://www.skool.com/ai-marketing-hub-pro) to get added.
